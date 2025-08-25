@@ -84,8 +84,12 @@ export async function GET(request: Request) {
 					});
 				}
 			});
-		} catch (err: any) {
-			errors.push({ source: source.name, error: err?.message || "Ukjent feil" });
+		} catch (err: unknown) {
+			let errorMsg = "Ukjent feil";
+			if (typeof err === "object" && err !== null && "message" in err && typeof (err as { message?: string }).message === "string") {
+				errorMsg = (err as { message: string }).message;
+			}
+			errors.push({ source: source.name, error: errorMsg });
 		}
 	}
 
