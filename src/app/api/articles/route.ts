@@ -1,97 +1,54 @@
-
-import axios from "axios";
+import { NextRequest, NextResponse } from "next/server";
 import * as cheerio from "cheerio";
-import { NextResponse } from "next/server";
 
-type Source = {
-	name: string;
-	url: string;
-	articleSelector: string;
+type Article = {
+  source: string;
+  title: string;
+  url: string;
+  published: string;
 };
 
-const sources: Source[] = [
-	{
-		name: "E24",
-		url: "https://e24.no",
-		articleSelector: "a",
-	},
-	{
-		name: "DN",
-		url: "https://www.dn.no",
-		articleSelector: "a",
-	},
-	{
-		name: "Finansavisen",
-		url: "https://finansavisen.no",
-		articleSelector: "a",
-	},
-	{
-		name: "VG",
-		url: "https://vg.no",
-		articleSelector: "a",
-	},
-	{
-		name: "Aftenposten",
-		url: "https://aftenposten.no",
-		articleSelector: "a",
-	},
-	{
-		name: "NRK Økonomi",
-		url: "https://www.nrk.no/okonomi/",
-		articleSelector: "a",
-	},
-	{
-		name: "Hegnar",
-		url: "https://www.hegnar.no",
-		articleSelector: "a",
-	},
-	{
-		name: "Sysla",
-		url: "https://sysla.no",
-		articleSelector: "a",
-	},
-	{
-		name: "Energi24",
-		url: "https://energi24.no",
-		articleSelector: "a",
-	},
-	{
-		name: "Skipsrevyen",
-		url: "https://www.skipsrevyen.no",
-		articleSelector: "a",
-	},
-];
+async function fetchE24Articles(query: string): Promise<Article[]> {
+  const url = "https://e24.no";
+  const res = await fetch(url);
+  const html = await res.text();
+  const $ = cheerio.load(html);
 
-export async function GET(request: Request) {
-	const { searchParams } = new URL(request.url);
-	const query = searchParams.get("q")?.toLowerCase() || "";
-	const results: { source: string; title: string; url: string }[] = [];
-	const errors: { source: string; error: string }[] = [];
+  const articles: Article[] = [];
 
-	for (const source of sources) {
-		try {
-			const res = await axios.get(source.url);
-			const $ = cheerio.load(res.data);
-			$(source.articleSelector).each((_: number, el) => {
-				const element = $(el);
-				const title = element.text().trim();
-				const href = element.attr("href");
-				if (title.toLowerCase().includes(query) && href) {
-					results.push({
-						source: source.name,
-						title,
-						url: href.startsWith("http") ? href : source.url + href,
-					});
-				}
-			});
-		} catch (err: unknown) {
-			let errorMsg = "Ukjent feil";
-			if (typeof err === "object" && err !== null && "message" in err && typeof (err as { message?: string }).message === "string") {
-				errorMsg = (err as { message: string }).message;
-			}
-			errors.push({ source: source.name, error: errorMsg });
-		}
-	}
+  $(".article-teaser__title").each((_: number, el: any) => {
+    const title = $(el).text().trim();
+    const parent = $(el).closest("a");
+    const href = parent.attr("href");
+    const published = parent.find("time").attr("datetime") || "";
 
-	return NextResponse.json({ articles: results, errors });
+    if (
+      title.toLowerCase().includes(query.toLowerCase())
+    ) {
+      articles.push({
+        source: "E24",
+        title,
+        url: href ? (href.startsWith("http") ? href : url + href) : url,
+        published,
+      });
+    }
+  });
+
+  // Sorter etter publiseringsdato (nyeste først)
+  articles.sort((a, b) => (b.published > a.published ? 1 : -1));
+  return articles.slice(0, 10);
+}
+
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const query = searchParams.get("q") || "";
+
+  if (!query) {
+    return NextResponse.json({ articles: [] });
+  }
+
+  // Utvid med flere kilder senere
+  const e24 = await fetchE24Articles(query);
+
+  return NextResponse.json({ articles: e24 });
 }
