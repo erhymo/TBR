@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-blue-600 min-h-screen;
+}
+body {
+  @apply bg-blue-50 text-gray-900;
+}
