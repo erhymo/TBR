@@ -31,9 +31,9 @@ export default function Home() {
   };
 
   return (
-    <main className="bg-gradient-to-br from-blue-200 to-blue-400 min-h-screen flex flex-col items-center justify-center">
-      <h1 className="text-4xl font-bold mb-4">TBR</h1>
-      <form className="mb-4 flex gap-2" onSubmit={handleSearch}>
+  <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-200 to-blue-400">
+  <h1 className="text-7xl font-extrabold tracking-wide mb-8 text-gray-900 drop-shadow-lg uppercase">TBR</h1>
+  <form className="mb-4 flex gap-2 justify-center items-center w-full max-w-md" onSubmit={handleSearch}>
         <input
           type="text"
           value={query}
