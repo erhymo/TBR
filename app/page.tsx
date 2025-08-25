@@ -1,93 +1,65 @@
 
-'use client';
-import { useState } from 'react';
+import { useState } from "react";
 
 type Article = {
   source: string;
-  date?: string;
-  title?: string;
-  url?: string;
+  title: string;
+  url: string;
 };
 
 export default function Home() {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<Article[]>([]);
-  const [searched, setSearched] = useState(false);
+  const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [error, setError] = useState("");
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setSearched(true);
+    setError("");
+    setArticles([]);
     try {
-      const res = await fetch('/api/articles');
+      const res = await fetch(`/api/articles?q=${encodeURIComponent(query)}`);
       const data = await res.json();
-      setResults(data.filter((r: Article) =>
-        r.title && r.title.toLowerCase().includes(query.toLowerCase())
-      ));
+      setArticles(data.articles);
+      if (data.articles.length === 0) {
+        setError("Ingen artikler funnet.");
+      }
     } catch {
-      setResults([]);
+      setError("Noe gikk galt med søket.");
     }
     setLoading(false);
   };
 
-  const handleReset = () => {
-    setQuery('');
-    setResults([]);
-    setSearched(false);
-  };
-
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen px-4">
-      <h1 className="text-white text-6xl font-extrabold mb-12 mt-8 tracking-wide">TBR</h1>
-      <form onSubmit={handleSearch} className="w-full max-w-xl flex flex-col items-center">
+    <div className="w-full max-w-xl mx-auto py-8">
+      <form onSubmit={handleSearch} className="flex gap-2 mb-8">
         <input
           type="text"
-          placeholder="Søk etter aksje..."
           value={query}
           onChange={e => setQuery(e.target.value)}
-          className="w-full px-6 py-4 rounded-lg text-lg mb-4 focus:outline-none focus:ring-2 focus:ring-white"
+          placeholder="Søk etter aksje eller selskap..."
+          className="flex-1 px-4 py-2 border rounded shadow focus:outline-none"
         />
-        <div className="flex gap-4 mb-8">
-          <button
-            type="submit"
-            className="bg-white text-blue-600 font-bold px-6 py-2 rounded-lg hover:bg-blue-100 transition"
-            disabled={loading}
-          >
-            {loading ? 'Laster...' : 'Søk'}
-          </button>
-          <button
-            type="button"
-            onClick={handleReset}
-            className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition"
-          >
-            Nullstill
-          </button>
-        </div>
+        <button
+          type="submit"
+          className="px-6 py-2 bg-blue-600 text-white rounded font-bold hover:bg-blue-700"
+          disabled={loading}
+        >
+          {loading ? "Søker..." : "Søk"}
+        </button>
       </form>
-      {searched && (
-        <ul className="bg-white bg-opacity-80 rounded-lg p-6 w-full max-w-2xl shadow-lg">
-          {results.length === 0 ? (
-            <li className="text-center text-gray-600">Ingen artikler funnet.</li>
-          ) : (
-            results.slice(0, 10).map((result: Article, idx: number) => (
-              <li key={idx} className="flex items-center gap-4 py-2 border-b last:border-b-0">
-                <span className="font-bold text-blue-600">{idx + 1}.</span>
-                <span className="text-gray-700 w-32">{result.source}</span>
-                <span className="text-gray-500 w-40">{result.date}</span>
-                <a
-                  href={result.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-700 hover:underline font-semibold flex-1"
-                >
-                  {result.title}
-                </a>
-              </li>
-            ))
-          )}
-        </ul>
-      )}
-    </main>
+      {error && <div className="text-red-600 mb-4">{error}</div>}
+      <ul className="space-y-4">
+        {articles.map((article, idx) => (
+          <li key={idx} className="border rounded p-4 bg-white shadow">
+            <a href={article.url} target="_blank" rel="noopener noreferrer" className="text-blue-700 font-semibold hover:underline">
+              {article.title}
+            </a>
+            <div className="text-xs text-gray-500 mt-1">Kilde: {article.source}</div>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

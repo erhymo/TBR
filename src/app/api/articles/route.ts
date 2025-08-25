@@ -1,40 +1,92 @@
 
-import { NextResponse } from 'next/server';
-import Parser from 'rss-parser';
+import axios from "axios";
+import * as cheerio from "cheerio";
+import { NextResponse } from "next/server";
 
-type Article = {
-  source: string;
-  date?: string;
-  title?: string;
-  url?: string;
+type Source = {
+	name: string;
+	url: string;
+	articleSelector: string;
 };
 
-const sources = [
-  { name: 'E24', url: 'https://e24.no/rss' },
-  { name: 'Finansavisen', url: 'https://finansavisen.no/rss' },
-  { name: 'Hegnar', url: 'https://www.hegnar.no/rss' },
-  // Legg til flere RSS-feeds her hvis tilgjengelig
+const sources: Source[] = [
+	{
+		name: "E24",
+		url: "https://e24.no",
+		articleSelector: "a",
+	},
+	{
+		name: "DN",
+		url: "https://www.dn.no",
+		articleSelector: "a",
+	},
+	{
+		name: "Finansavisen",
+		url: "https://finansavisen.no",
+		articleSelector: "a",
+	},
+	{
+		name: "VG",
+		url: "https://vg.no",
+		articleSelector: "a",
+	},
+	{
+		name: "Aftenposten",
+		url: "https://aftenposten.no",
+		articleSelector: "a",
+	},
+	{
+		name: "NRK Økonomi",
+		url: "https://www.nrk.no/okonomi/",
+		articleSelector: "a",
+	},
+	{
+		name: "Hegnar",
+		url: "https://www.hegnar.no",
+		articleSelector: "a",
+	},
+	{
+		name: "Sysla",
+		url: "https://sysla.no",
+		articleSelector: "a",
+	},
+	{
+		name: "Energi24",
+		url: "https://energi24.no",
+		articleSelector: "a",
+	},
+	{
+		name: "Skipsrevyen",
+		url: "https://www.skipsrevyen.no",
+		articleSelector: "a",
+	},
 ];
 
-export async function GET() {
-  const parser = new Parser();
-  const articles: Article[] = [];
+export async function GET(request: Request) {
+	const { searchParams } = new URL(request.url);
+	const query = searchParams.get("q")?.toLowerCase() || "";
+	const results: { source: string; title: string; url: string }[] = [];
 
-  for (const source of sources) {
-    try {
-      const feed = await parser.parseURL(source.url);
-      feed.items.slice(0, 10).forEach((item) => {
-        articles.push({
-          source: source.name,
-          date: typeof item.pubDate === 'string' ? item.pubDate : '',
-          title: typeof item.title === 'string' ? item.title : '',
-          url: typeof item.link === 'string' ? item.link : '',
-        });
-      });
-    } catch {
-      // Hopp over kilder som feiler
-    }
-  }
+	for (const source of sources) {
+		try {
+			const res = await axios.get(source.url);
+			const $ = cheerio.load(res.data);
+					$(source.articleSelector).each((_: number, el) => {
+						const element = $(el);
+						const title = element.text().trim();
+						const href = element.attr("href");
+						if (title.toLowerCase().includes(query) && href) {
+							results.push({
+								source: source.name,
+								title,
+								url: href.startsWith("http") ? href : source.url + href,
+							});
+						}
+					});
+		} catch {
+			// Ignorer feil for denne kilden
+		}
+	}
 
-  return NextResponse.json(articles.slice(0, 10));
+	return NextResponse.json({ articles: results });
 }
