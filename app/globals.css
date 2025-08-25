@@ -2,12 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 body {
-  @apply bg-blue-600 min-h-screen;
+  @apply min-h-screen bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300 font-sans;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap');
+
+.font-tbr {
+  font-family: 'Montserrat', sans-serif;
+  letter-spacing: 0.1em;
 }
 body {
   @apply bg-blue-50 text-gray-900;
