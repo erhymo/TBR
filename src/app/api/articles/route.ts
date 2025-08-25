@@ -16,6 +16,7 @@ async function fetchE24Articles(query: string): Promise<Article[]> {
 
   const articles: Article[] = [];
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   $(".article-teaser__title").each((_: number, el: any) => {
     const title = $(el).text().trim();
     const parent = $(el).closest("a");
