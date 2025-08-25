@@ -14,10 +14,7 @@ export default function RootLayout({
   return (
     <html lang="no">
       <body className="bg-blue-50 flex flex-col min-h-screen">
-        {/* Stor TBR tittel med glød */}
-        <header className="pt-8 pb-4 text-center text-7xl font-extrabold tracking-wide text-gray-900 drop-shadow-lg">
-          TBR
-        </header>
+  {/* Header uten TBR-tittel */}
         <main className="flex-1 flex flex-col items-center justify-center px-4">
           {children}
         </main>

@@ -66,27 +66,28 @@ export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
 	const query = searchParams.get("q")?.toLowerCase() || "";
 	const results: { source: string; title: string; url: string }[] = [];
+	const errors: { source: string; error: string }[] = [];
 
 	for (const source of sources) {
 		try {
 			const res = await axios.get(source.url);
 			const $ = cheerio.load(res.data);
-					$(source.articleSelector).each((_: number, el) => {
-						const element = $(el);
-						const title = element.text().trim();
-						const href = element.attr("href");
-						if (title.toLowerCase().includes(query) && href) {
-							results.push({
-								source: source.name,
-								title,
-								url: href.startsWith("http") ? href : source.url + href,
-							});
-						}
+			$(source.articleSelector).each((_: number, el) => {
+				const element = $(el);
+				const title = element.text().trim();
+				const href = element.attr("href");
+				if (title.toLowerCase().includes(query) && href) {
+					results.push({
+						source: source.name,
+						title,
+						url: href.startsWith("http") ? href : source.url + href,
 					});
-		} catch {
-			// Ignorer feil for denne kilden
+				}
+			});
+		} catch (err: any) {
+			errors.push({ source: source.name, error: err?.message || "Ukjent feil" });
 		}
 	}
 
-	return NextResponse.json({ articles: results });
+	return NextResponse.json({ articles: results, errors });
 }

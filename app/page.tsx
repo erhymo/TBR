@@ -35,8 +35,17 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen w-full">
       <div className="flex flex-col items-center w-full">
-  {/* TBR-tittel fjernet, vises kun i header via layout.tsx */}
-        <form onSubmit={handleSearch} className="flex gap-2 w-full max-w-xl mt-8 mb-8 justify-center">
+        <h1
+          className="text-[7vw] font-extrabold text-blue-700 drop-shadow-2xl mb-10 text-center tracking-tight"
+          style={{
+            fontFamily: 'Segoe UI, Arial, sans-serif',
+            letterSpacing: '-0.05em',
+            textShadow: '0 2px 24px #60a5fa, 0 1px 0 #fff',
+          }}
+        >
+          TBR
+        </h1>
+        <form onSubmit={handleSearch} className="flex gap-2 w-full max-w-xl mb-12 justify-center">
           <input
             type="text"
             value={query}
@@ -51,6 +60,18 @@ export default function Home() {
             disabled={loading}
           >
             {loading ? "Søker..." : "Søk"}
+          </button>
+          <button
+            type="button"
+            className="px-6 py-4 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 text-xl shadow"
+            onClick={() => {
+              setQuery("");
+              setArticles([]);
+              setError("");
+            }}
+            disabled={loading && query === ""}
+          >
+            Nullstill
           </button>
         </form>
         {error && <div className="text-red-600 mb-4 text-lg">{error}</div>}
